@@ -1,4 +1,4 @@
 interface:
   display_name: "Rustacean"
   short_description: "Strict Rust correctness discipline"
-  default_prompt: "Use $rustacean to write or review Rust code with complete mathematical models, semantic predicates, abstract-algebra cryptography, topology-aware and induction-based distributed tests, careful Clone or Copy semantics, rich tests, and panic-free production paths."
+  default_prompt: "Use $rustacean to write or review Rust code with clear grouped assertions, complete mathematical models, semantic predicates, abstract-algebra cryptography, topology-aware and induction-based distributed tests, careful Clone or Copy semantics, rich tests, and panic-free production paths."

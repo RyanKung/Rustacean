@@ -9,6 +9,8 @@ description: Strict Rust review and generation for panic-free production paths, 
 
 Use this skill as a set of assertions. Treat each assertion as satisfied, violated, or explicitly deferred by a user constraint. Prefer exact code facts over taste claims. Name the type, function, module, invariant, test, or side-effect boundary that makes the assertion true.
 
+State the fact. Name the witness. Do not argue taste.
+
 When reporting about Rust code, write in short declarative statements:
 
 - The invariant is in the type.
@@ -22,15 +24,15 @@ When reporting about Rust code, write in short declarative statements:
 
 ## Assertions
 
-1. Choose the right thing, not the familiar thing. Correct design is neither needless complexity nor simple triviality. Preserve the real states of the problem. Remove only distinctions that are not semantically used.
+1. Code pictures a model. Correct design is neither needless complexity nor simple triviality. Preserve every real state of the problem. Erase only distinctions that are not semantically used.
 
 2. Repetition is evidence. When the same structure appears twice, inspect it. When it appears three times, abstract it unless the third case proves a real difference. Prefer generic functions, traits, `macro_rules!`, or procedural macros when they remove semantic duplication. Use macros to make repetition impossible, not to hide ordinary control flow.
 
-3. Functions compose before objects organize. Prefer data, pure functions, and small traits over OOP-shaped object graphs. Put effects at named boundaries. Core modules receive values and return values. IO, time, randomness, networking, process state, and filesystem access stay in adapter modules. For homomorphic data transformations, think like Haskell: map structure to structure, and keep effects outside the mapping.
+3. Functions compose before objects organize. Prefer data, pure functions, and small traits over OOP-shaped object graphs. Put effects at named boundaries. Core modules receive values and return values. IO, time, randomness, networking, process state, and filesystem access stay in adapter modules. Homomorphic transformations map structure to structure and keep effects outside the mapping.
 
-4. Invariants are propositions. Express invariants in types first, constructors second, runtime checks third, tests fourth, and comments last. Add formal-logic comments where reasoning crosses function or module boundaries. Do not decorate obvious code with symbolic noise.
+4. Invariants are propositions. Express invariants in types first, constructors second, runtime checks third, tests fourth, and comments last. A constructor is a proof that a value may exist. Add formal-logic comments where reasoning crosses function or module boundaries. Do not decorate obvious code with symbolic noise.
 
-5. Quality must be witnessed. `cargo fmt` and `cargo clippy` are only the floor. Add unit tests for pure functions, table tests for boundary cases, property tests for laws, integration tests for side-effect boundaries, and regression tests for fixed bugs. A test name should state the proposition it witnesses.
+5. Quality is witnessed, not asserted. `cargo fmt` and `cargo clippy` are only the floor. Add unit tests for pure functions, table tests for boundary cases, property tests for laws, integration tests for side-effect boundaries, and regression tests for fixed bugs. A test name should state the proposition it witnesses.
 
 6. Documentation is part of the public type. Document every public item. Put `#![deny(missing_docs)]` in crate roots such as `lib.rs` and `main.rs`. If generated or foreign code prevents this, isolate that code and document the reason at the smallest possible scope.
 
@@ -42,7 +44,7 @@ When reporting about Rust code, write in short declarative statements:
 
 10. The model comes before the implementation. A good implementation has a complete model, or names the exact incompleteness it accepts. If a behavior can be expressed mathematically or in formal logic, prefer that expression before code shape. The implementation should be a witness of the model, not a substitute for it.
 
-11. Duplication of ownership is a semantic claim. Use `Clone` cautiously. A `.clone()` that merely appeases the borrow checker is a design smell. Prefer borrowing, lifetime repair, smaller ownership scopes, or explicit state transitions. Prefer `Copy` over `Clone` only for small, immutable, identity-free value types where duplication is semantically invisible.
+11. Ownership duplication is a semantic claim. Use `Clone` cautiously. A `.clone()` that merely appeases the borrow checker is a design smell. Prefer borrowing, lifetime repair, smaller ownership scopes, or explicit state transitions. Prefer `Copy` over `Clone` only for small, immutable, identity-free value types where duplication is semantically invisible.
 
 12. Logic deserves a name. Do not expose primitive comparisons, boolean plumbing, or multi-clause conditions at the call site when they express a domain proposition. Prefer semantic predicates such as `a.equals(b)`, `same_identity(a, b)`, `order.can_fill(book)`, or `state.permits(event)`. The caller should read the proposition, not reconstruct it.
 
@@ -52,14 +54,16 @@ Before choosing modules and functions, name the mathematical object or formal mo
 
 For cryptography:
 
-- Require abstract-algebra modeling before byte-level plumbing. Use group theory, field theory, ring theory, module theory, and category theory where they describe the cryptographic object or protocol composition.
+- Cryptography is algebra before bytes.
 - Name the carrier set, operation, identity, inverse, scalar field, encoding, decoding, and subgroup or domain-separation checks when they matter.
+- Use group theory, field theory, ring theory, module theory, and category theory where they describe the cryptographic object or protocol composition.
 - Treat morphisms, functors, natural transformations, and algebraic laws as legitimate design tools when they clarify composition, encoding, transcript construction, or proof structure.
 - Keep secret material inside types that enforce constant-time comparison, controlled serialization, and zeroization when required.
 - Treat unchecked encoding, invalid curve points, missing subgroup checks, and ad hoc byte concatenation as model failures.
 
 For distributed systems:
 
+- A distributed system is a state relation before it is a cluster.
 - Prefer TLA-style abstraction before implementation. Name state variables, initial states, actions, next-state relation, safety invariants, liveness expectations, and fairness assumptions.
 - Separate protocol state from transport behavior, retries, clocks, and persistence.
 - Model message loss, duplication, reordering, timeout, restart, and partial failure explicitly.
@@ -71,6 +75,7 @@ For distributed systems:
 
 For stateful logic:
 
+- State is a value in motion.
 - Prefer monadic state modeling. Make the transition shape explicit: `State -> Input -> Result<(State, Output), Error>` or an equivalent typed composition.
 - Use `Option`, `Result`, iterator adapters, futures, parser combinators, and state-passing functions as compositional effects.
 - Keep hidden mutable state out of pure transitions. A state transition should be replayable from its input state and event.
@@ -210,7 +215,7 @@ The retry error is stringly typed.
 The panic path remains in load_cache.
 The protocol has no TLA-style state relation.
 The cryptography model is byte-level; the algebra is missing.
-The distributed tests sample traces but do not cover the schedule topology.
+The distributed tests sample traces but do not cover execution topology.
 The cluster-size tests sample N values but never prove an N-to-N-plus-one step.
 The clone in apply_event hides ownership of state.
 The equality check in authorize exposes identity logic instead of naming the predicate.
