@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rustacean"
+  short_description: "Strict Rust correctness discipline"
+  default_prompt: "Use $rustacean to write or review Rust code with complete models, explicit errors, documented APIs, pure core logic, careful Clone or Copy semantics, rich tests, and panic-free production paths."
