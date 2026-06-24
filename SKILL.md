@@ -180,25 +180,7 @@ cargo clippy --all-targets --all-features -- \
 cargo test --all-targets --all-features
 ```
 
-Search for forbidden or suspect constructs:
-
-```bash
-rg -n '\b(anyhow|eyre)\b|Box<dyn Error>|unwrap\(|expect\(|panic!|todo!|unimplemented!|unreachable!'
-```
-
-Search for ownership duplication that needs justification:
-
-```bash
-rg -n '\.clone\(|clone_from\(|derive\([^)]*(Clone|Copy)'
-```
-
-Search for naked conditionals that may need semantic predicates:
-
-```bash
-rg -n '\bif\b.*(==|!=|&&|\|\||>=|<=|>|<)'
-```
-
-Inspect the results instead of applying a blind rule. Use `clippy::indexing_slicing` for unchecked indexing and slicing; do not use a broad bracket regex because it also matches attributes, array types, and harmless literals. Indexing inside tests may be harmless. Indexing in production code needs a proof, a checked access path, or a type-level bound.
+Inspect the code instead of applying a blind rule. Use the repository's available search and analysis tools to find forbidden constructs, unjustified ownership duplication, and naked conditionals. Use `clippy::indexing_slicing` for unchecked indexing and slicing. Indexing inside tests may be harmless. Indexing in production code needs a proof, a checked access path, or a type-level bound.
 
 Check structure:
 
