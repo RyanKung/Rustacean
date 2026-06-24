@@ -72,17 +72,9 @@ Codex can also invoke the skill implicitly when a Rust writing, review, or refac
 
 ## OpenClaw
 
-OpenClaw supports shared and workspace-scoped skills. For local OpenClaw installs, use `~/.openclaw/skills` for user-level skills. Some OpenClaw setups also scan the shared Agent Skills path `~/.agents/skills`.
+OpenClaw skill discovery varies by build and deployment. The most portable locations are the shared Agent Skills path `~/.agents/skills` and workspace-scoped `.agents/skills` directories. Some legacy or shared OpenClaw installs may also scan `~/.openclaw/skills`; use that path only when your OpenClaw build is configured to read it.
 
-Install for OpenClaw:
-
-```bash
-cd /path/to/Rustacean
-mkdir -p ~/.openclaw/skills
-ln -s "$(pwd)" ~/.openclaw/skills/rustacean
-```
-
-Install in the shared Agent Skills path when your OpenClaw setup is configured to scan it:
+Install in the shared Agent Skills path:
 
 ```bash
 cd /path/to/Rustacean
@@ -96,6 +88,14 @@ Install for one OpenClaw workspace:
 cd /path/to/Rustacean
 mkdir -p /path/to/openclaw-workspace/.agents/skills
 ln -s "$(pwd)" /path/to/openclaw-workspace/.agents/skills/rustacean
+```
+
+Install in the legacy shared OpenClaw path only if your build scans it:
+
+```bash
+cd /path/to/Rustacean
+mkdir -p ~/.openclaw/skills
+ln -s "$(pwd)" ~/.openclaw/skills/rustacean
 ```
 
 Start a new OpenClaw session after installation. Invoke it by asking OpenClaw to use the `rustacean` skill for Rust code. If your OpenClaw build exposes skill slash commands, use:
@@ -117,6 +117,12 @@ ln -s "$(pwd)" ~/.hermes/skills/rustacean
 ```
 
 Alternatively, keep the skill in a shared skills directory and add that parent directory to `skills.external_dirs`:
+
+```bash
+cd /path/to/Rustacean
+mkdir -p /path/to/shared-skills
+ln -s "$(pwd)" /path/to/shared-skills/rustacean
+```
 
 ```yaml
 skills:

@@ -1,6 +1,6 @@
 ---
 name: rustacean
-description: Apply strict Rust engineering judgment when writing, reviewing, or refactoring Rust code. Use for Rust tasks that need correctness-first design, model completeness, mathematical or formal-logic abstractions, abstract-algebra cryptography models using group theory, field theory, and category theory, TLA-style distributed-system models, topology-aware distributed-system testing, induction-based N-to-N-plus-one testing for large distributed systems, monadic state modeling, macro use to remove repetition, functional abstractions over OOP habits, explicit side-effect boundaries, rich tests, complete documentation with deny(missing_docs), bounded size, explicit error types, careful Clone or Copy semantics, and production code without panic paths.
+description: Strict Rust review and generation for panic-free production paths, explicit errors, documented APIs, pure cores, formal models, rich tests, and careful Clone or Copy. Use when Rust work needs model completeness, abstract-algebra cryptography, TLA-style distributed systems, topology-aware or induction-based tests, monadic state, macro-based deduplication, side-effect boundaries, and bounded code size.
 ---
 
 # Rustacean
@@ -132,14 +132,21 @@ When reviewing or refactoring Rust code under this skill, check these facts befo
 
 ```bash
 cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
+cargo clippy --all-targets --all-features -- \
+  -D warnings \
+  -D clippy::unwrap_used \
+  -D clippy::expect_used \
+  -D clippy::panic \
+  -D clippy::todo \
+  -D clippy::unimplemented \
+  -D clippy::indexing_slicing
 cargo test --all-targets --all-features
 ```
 
 Search for forbidden or suspect constructs:
 
 ```bash
-rg -n '\b(anyhow|eyre)\b|Box<dyn Error>|unwrap\(|expect\(|panic!|todo!|unimplemented!|unreachable!|\[[^]]+\]'
+rg -n '\b(anyhow|eyre)\b|Box<dyn Error>|unwrap\(|expect\(|panic!|todo!|unimplemented!|unreachable!'
 ```
 
 Search for ownership duplication that needs justification:
@@ -148,7 +155,7 @@ Search for ownership duplication that needs justification:
 rg -n '\.clone\(|clone_from\(|derive\([^)]*(Clone|Copy)'
 ```
 
-Inspect the results instead of applying a blind rule. Indexing inside tests may be harmless. Indexing in production code needs a proof, a checked access path, or a type-level bound.
+Inspect the results instead of applying a blind rule. Use `clippy::indexing_slicing` for unchecked indexing and slicing; do not use a broad bracket regex because it also matches attributes, array types, and harmless literals. Indexing inside tests may be harmless. Indexing in production code needs a proof, a checked access path, or a type-level bound.
 
 Check structure:
 
