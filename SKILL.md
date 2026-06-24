@@ -1,6 +1,6 @@
 ---
 name: rustacean
-description: Strict Rust review and generation for panic-free production paths, explicit errors, documented APIs, pure cores, formal models, rich tests, and careful Clone or Copy. Use when Rust work needs model completeness, abstract-algebra cryptography, TLA-style distributed systems, topology-aware or induction-based tests, monadic state, macro-based deduplication, side-effect boundaries, and bounded code size.
+description: Strict Rust review and generation for panic-free production paths, explicit errors, documented APIs, pure cores, formal models, semantic predicates, rich tests, and careful Clone or Copy. Use when Rust work needs model completeness, abstract-algebra cryptography, TLA-style distributed systems, topology-aware or induction-based tests, monadic state, macro-based deduplication, side-effect boundaries, and bounded code size.
 ---
 
 # Rustacean
@@ -18,6 +18,7 @@ When reporting about Rust code, write in short declarative statements:
 - The panic path remains.
 - The model is complete.
 - The clone is unjustified.
+- The predicate is naked.
 
 ## Assertions
 
@@ -42,6 +43,8 @@ When reporting about Rust code, write in short declarative statements:
 10. The model comes before the implementation. A good implementation has a complete model, or names the exact incompleteness it accepts. If a behavior can be expressed mathematically or in formal logic, prefer that expression before code shape. The implementation should be a witness of the model, not a substitute for it.
 
 11. Duplication of ownership is a semantic claim. Use `Clone` cautiously. A `.clone()` that merely appeases the borrow checker is a design smell. Prefer borrowing, lifetime repair, smaller ownership scopes, or explicit state transitions. Prefer `Copy` over `Clone` only for small, immutable, identity-free value types where duplication is semantically invisible.
+
+12. Logic deserves a name. Do not expose primitive comparisons, boolean plumbing, or multi-clause conditions at the call site when they express a domain proposition. Prefer semantic predicates such as `a.equals(b)`, `same_identity(a, b)`, `order.can_fill(book)`, or `state.permits(event)`. The caller should read the proposition, not reconstruct it.
 
 ## Model Completeness
 
@@ -108,6 +111,39 @@ Prefer these forms:
 - `Law`: an algebraic relation that tests must witness.
 - `Preservation`: why a state transition keeps the invariant true.
 
+## Semantic Predicates
+
+Use named predicates to express domain logic declaratively.
+
+Prefer:
+
+```rust
+if order.can_match(resting_order) {
+    book.match_order(order, resting_order)?;
+}
+
+if same_principal(actor, owner) {
+    grant_access(actor, resource)?;
+}
+```
+
+Avoid:
+
+```rust
+if order.side != resting_order.side
+    && order.price >= resting_order.price
+    && order.quantity > Quantity::ZERO
+{
+    book.match_order(order, resting_order)?;
+}
+
+if actor.id == owner.id && actor.realm == owner.realm {
+    grant_access(actor, resource)?;
+}
+```
+
+Inline primitive comparisons are acceptable only when the primitive itself is the domain concept, the expression is local and trivial, or the named predicate would obscure rather than reveal the proposition.
+
 ## Implementation Discipline
 
 Start from the domain.
@@ -119,6 +155,7 @@ Start from the domain.
 - Prefer iterator pipelines and total helper functions for pure transformations.
 - Use traits when there are multiple implementations, a boundary needs injection, or a law is shared. Do not create traits merely to imitate classes.
 - Use `macro_rules!` for local syntactic repetition. Use procedural macros only when the generated structure is large, law-bound, and otherwise error-prone.
+- Replace naked primitive conditionals with semantic predicates. Prefer `state.accepts(event)`, `same_key(a, b)`, or `can_transition(from, to)` over inline `if a == b && c != d`.
 - Keep `async`, threads, locks, channels, global state, and process exits at explicit outer layers.
 - Avoid `Arc<Mutex<_>>` until shared mutation is part of the problem statement, not an accident of implementation.
 - Avoid `.clone()` as a borrow-checker escape hatch. First try passing references, narrowing lifetimes, moving ownership at the correct boundary, or extracting a smaller owned value.
@@ -155,6 +192,12 @@ Search for ownership duplication that needs justification:
 rg -n '\.clone\(|clone_from\(|derive\([^)]*(Clone|Copy)'
 ```
 
+Search for naked conditionals that may need semantic predicates:
+
+```bash
+rg -n '\bif\b.*(==|!=|&&|\|\||>=|<=|>|<)'
+```
+
 Inspect the results instead of applying a blind rule. Use `clippy::indexing_slicing` for unchecked indexing and slicing; do not use a broad bracket regex because it also matches attributes, array types, and harmless literals. Indexing inside tests may be harmless. Indexing in production code needs a proof, a checked access path, or a type-level bound.
 
 Check structure:
@@ -168,6 +211,7 @@ Check structure:
 - Distributed-system tests cover schedule topology, failure topology, and invariant preservation, not only hand-picked traces.
 - Large distributed-system tests use a property-preserving reduction with base-case and `N`/`N + 1` induction-step coverage when such a reduction exists.
 - `Clone` and `Copy` implementations have documented semantic laws.
+- Domain propositions are expressed as semantic predicates instead of naked primitive conditionals.
 - Tests cover laws, boundaries, and known regressions.
 - No source file exceeds 1000 lines.
 - No function exceeds 100 lines.
@@ -187,6 +231,7 @@ The cryptography model is byte-level; the algebra is missing.
 The distributed tests sample traces but do not cover the schedule topology.
 The cluster-size tests sample N values but never prove an N-to-N-plus-one step.
 The clone in apply_event hides ownership of state.
+The equality check in authorize exposes identity logic instead of naming the predicate.
 ```
 
 If a user asks for implementation, fix the violation directly. If a user asks only for review, stay read-only and list violations with file and line references.
