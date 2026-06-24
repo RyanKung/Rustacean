@@ -1,6 +1,6 @@
 ---
 name: rustacean
-description: Apply strict Rust engineering judgment when writing, reviewing, or refactoring Rust code. Use for Rust tasks that need correctness-first design, model completeness, mathematical or formal-logic abstractions, group-theoretic cryptography models, TLA-style distributed-system models, monadic state modeling, macro use to remove repetition, functional abstractions over OOP habits, explicit side-effect boundaries, rich tests, complete documentation with deny(missing_docs), bounded size, explicit error types, careful Clone or Copy semantics, and production code without panic paths.
+description: Apply strict Rust engineering judgment when writing, reviewing, or refactoring Rust code. Use for Rust tasks that need correctness-first design, model completeness, mathematical or formal-logic abstractions, abstract-algebra cryptography models using group theory, field theory, and category theory, TLA-style distributed-system models, topology-aware distributed-system testing, induction-based N-to-N-plus-one testing for large distributed systems, monadic state modeling, macro use to remove repetition, functional abstractions over OOP habits, explicit side-effect boundaries, rich tests, complete documentation with deny(missing_docs), bounded size, explicit error types, careful Clone or Copy semantics, and production code without panic paths.
 ---
 
 # Rustacean
@@ -49,8 +49,9 @@ Before choosing modules and functions, name the mathematical object or formal mo
 
 For cryptography:
 
-- Prefer group-theoretic, ring-theoretic, or field-theoretic abstractions before byte-level plumbing.
+- Require abstract-algebra modeling before byte-level plumbing. Use group theory, field theory, ring theory, module theory, and category theory where they describe the cryptographic object or protocol composition.
 - Name the carrier set, operation, identity, inverse, scalar field, encoding, decoding, and subgroup or domain-separation checks when they matter.
+- Treat morphisms, functors, natural transformations, and algebraic laws as legitimate design tools when they clarify composition, encoding, transcript construction, or proof structure.
 - Keep secret material inside types that enforce constant-time comparison, controlled serialization, and zeroization when required.
 - Treat unchecked encoding, invalid curve points, missing subgroup checks, and ad hoc byte concatenation as model failures.
 
@@ -59,6 +60,10 @@ For distributed systems:
 - Prefer TLA-style abstraction before implementation. Name state variables, initial states, actions, next-state relation, safety invariants, liveness expectations, and fairness assumptions.
 - Separate protocol state from transport behavior, retries, clocks, and persistence.
 - Model message loss, duplication, reordering, timeout, restart, and partial failure explicitly.
+- Consider topology-aware testing for distributed behavior. Model execution spaces, schedule equivalence classes, failure topologies, partition and merge shapes, and invariant preservation under projection, refinement, and composition.
+- Prefer tests that cover the topology of possible executions over tests that merely sample linear traces.
+- For large distributed systems, use mathematical induction when possible. Find a property-preserving reduction from an arbitrary network to a smaller representative network, prove the base case, then test the induction step from `N` to `N + 1` without losing the safety or liveness property under inspection.
+- Prefer `N`/`N + 1` tests over unbounded cluster-size sampling when the reduction is sound. Name the reduction relation and the preserved property.
 - Treat a concurrent implementation without a state-transition model as incomplete until the safety property is named and tested.
 
 For stateful logic:
@@ -152,6 +157,9 @@ Check structure:
 - Error types are explicit and local to the domain they describe.
 - Side effects are confined to named modules.
 - The model is complete for cryptography, distributed systems, and stateful logic, or its incompleteness is explicit.
+- Cryptographic code is expressed through abstract algebra before bytes, buffers, or encodings.
+- Distributed-system tests cover schedule topology, failure topology, and invariant preservation, not only hand-picked traces.
+- Large distributed-system tests use a property-preserving reduction with base-case and `N`/`N + 1` induction-step coverage when such a reduction exists.
 - `Clone` and `Copy` implementations have documented semantic laws.
 - Tests cover laws, boundaries, and known regressions.
 - No source file exceeds 1000 lines.
@@ -168,6 +176,9 @@ The IO effect leaks into normalize_rules.
 The retry error is stringly typed.
 The panic path remains in load_cache.
 The protocol has no TLA-style state relation.
+The cryptography model is byte-level; the algebra is missing.
+The distributed tests sample traces but do not cover the schedule topology.
+The cluster-size tests sample N values but never prove an N-to-N-plus-one step.
 The clone in apply_event hides ownership of state.
 ```
 
